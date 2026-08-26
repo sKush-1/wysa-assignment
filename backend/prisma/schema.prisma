@@ -1,0 +1,104 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 1. USER MANAGEMENT (Simulated Auth)
+// ==========================================
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  
+  history   FlowHistory[]
+  state     FlowState?
+}
+
+// ==========================================
+// 2. THE GRAPH (Modules, Nodes & Edges)
+// ==========================================
+model Module {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  
+  questions   Question[]
+  activeUsers FlowState[] // Tracks users currently active in this module
+}
+
+model Question {
+  id           String   @id @default(uuid())
+  moduleId     String
+  text         String
+  isCheckpoint Boolean  @default(false) // Core requirement: locks the breadcrumb trail
+  
+  module       Module   @relation(fields: [moduleId], references: [id])
+  
+  // A question has many options to choose from
+  options      Option[] @relation("QuestionToOptions")
+  
+  // Other options that point TO this question (Defensive design: ensures valid routing)
+  incomingRoutes Option[] @relation("OptionToNextQuestion")
+  
+  historyLogs  FlowHistory[]
+  activeStates FlowState[]
+}
+
+model Option {
+  id             String   @id @default(uuid())
+  questionId     String   // The question this option belongs to
+  text           String
+  
+  // The Routing Mechanism: Where does this lead? 
+  // Nullable because it might be the end of the entire flow.
+  nextQuestionId String?  
+  
+  // Relations mapped carefully to avoid Prisma ambiguity
+  question       Question  @relation("QuestionToOptions", fields: [questionId], references: [id])
+  nextQuestion   Question? @relation("OptionToNextQuestion", fields: [nextQuestionId], references: [id])
+  
+  historyLogs    FlowHistory[]
+}
+
+// ==========================================
+// 3. THE HISTORY (Immutable Ledger)
+// ==========================================
+model FlowHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  questionId String   // The question they were asked
+  optionId   String   // The answer they selected
+  createdAt  DateTime @default(now()) // Immutable timestamp
+
+  user       User     @relation(fields: [userId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id])
+  option     Option   @relation(fields: [optionId], references: [id])
+}
+
+// ==========================================
+// 4. THE STATE (Mutable Active Session)
+// ==========================================
+model FlowState {
+  id                String   @id @default(uuid())
+  userId            String   @unique // Strict 1-to-1: One active state per user
+  
+  currentModuleId   String
+  currentQuestionId String
+  
+  // The Breadcrumbs: JSON array tracking the path taken (e.g., ["uuid1", "uuid2"])
+  // Emptied when a checkpoint is passed or a module is switched.
+  breadcrumbTrail   Json     @default("[]") 
+  
+  updatedAt         DateTime @updatedAt // Automatically updates when they move
+
+  user              User     @relation(fields: [userId], references: [id])
+  module            Module   @relation(fields: [currentModuleId], references: [id])
+  currentQuestion   Question @relation(fields: [currentQuestionId], references: [id])
+}
