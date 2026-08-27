@@ -24,6 +24,21 @@ export async function startFlow(user: User, moduleId: string) {
   const module = await prisma.module.findUnique({ where: { id: moduleId } })
   if (!module) throw new AppError(404, `Module "${moduleId}" not found.`)
 
+  // Defensive Guard: Check if user has already visited or answered questions in this module
+  const visitedCount = await prisma.flowHistory.count({
+    where: {
+      userId: user.id,
+      question: { moduleId },
+    },
+  })
+
+  if (visitedCount > 0) {
+    throw new AppError(
+      403,
+      'Forbidden: You have already completed or visited this module. The conversation state moves forward.',
+    )
+  }
+
   // Entry-point = question in this module that no other question in the SAME
   // module routes to (i.e. its incomingRoutes all come from other modules, or none at all).
   const firstQuestion = await prisma.question.findFirst({
@@ -210,4 +225,35 @@ export async function goBack(user: User) {
   })
 
   return { question, breadcrumbTrail: newTrail }
+}
+
+// ── 6. GET /api/flow/modules ──────────────────────────────────────────────────
+export async function listModules(user?: User) {
+  const modules = await prisma.module.findMany({
+    orderBy: { name: 'asc' },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      _count: {
+        select: { questions: true },
+      },
+    },
+  })
+
+  let visitedModuleIds = new Set<string>()
+  if (user) {
+    const visited = await prisma.flowHistory.findMany({
+      where: { userId: user.id },
+      select: { question: { select: { moduleId: true } } },
+    })
+    visitedModuleIds = new Set(visited.map((v) => v.question.moduleId))
+  }
+
+  const enrichedModules = modules.map((m) => ({
+    ...m,
+    visited: visitedModuleIds.has(m.id),
+  }))
+
+  return { modules: enrichedModules }
 }

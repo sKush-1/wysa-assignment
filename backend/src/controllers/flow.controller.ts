@@ -9,7 +9,7 @@ export async function startFlow(req: Request, res: Response, next: NextFunction)
       res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
       return
     }
-    const result = await flowService.startFlow(req.user, parsed.data.moduleId)
+    const result = await flowService.startFlow(req.user!, parsed.data.moduleId)
     res.status(200).json(result)
   } catch (err) {
     next(err)
@@ -22,7 +22,7 @@ export async function getCurrentQuestion(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const result = await flowService.getCurrentQuestion(req.user)
+    const result = await flowService.getCurrentQuestion(req.user!)
     res.status(200).json(result)
   } catch (err) {
     next(err)
@@ -36,7 +36,7 @@ export async function deepLinkQuestion(
 ): Promise<void> {
   try {
     const questionId = req.params['questionId'] as string
-    const result = await flowService.deepLinkQuestion(req.user, questionId)
+    const result = await flowService.deepLinkQuestion(req.user!, questionId)
     // 307 signals to the client that its link is stale
     res.status(result.redirected ? 307 : 200).json(result)
   } catch (err) {
@@ -52,7 +52,7 @@ export async function submitAnswer(req: Request, res: Response, next: NextFuncti
       return
     }
     const result = await flowService.submitAnswer(
-      req.user,
+      req.user!,
       parsed.data.questionId,
       parsed.data.optionId,
     )
@@ -64,7 +64,16 @@ export async function submitAnswer(req: Request, res: Response, next: NextFuncti
 
 export async function goBack(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const result = await flowService.goBack(req.user)
+    const result = await flowService.goBack(req.user!)
+    res.status(200).json(result)
+  } catch (err) {
+    next(err)
+  }
+}
+
+export async function listModules(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await flowService.listModules(req.user)
     res.status(200).json(result)
   } catch (err) {
     next(err)

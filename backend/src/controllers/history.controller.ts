@@ -7,7 +7,7 @@ export async function getUserHistory(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const history = await historyService.getUserHistory(req.user)
+    const history = await historyService.getUserHistory(req.user!)
     res.status(200).json({ history })
   } catch (err) {
     next(err)

@@ -1,0 +1,67 @@
+Backend Engineer (Junior) — Take Home
+Assignment
+Objective
+Build a backend service that powers a modular conversation flow system.
+This assignment evaluates:
+- API design
+- Data modeling
+- Handling of user state vs conversation history
+- Defensive backend design for edge cases
+- Ability to use AI tools responsibly and transparently
+You are allowed (and encouraged) to use AI tools. However, you must clearly document how
+you used them (details below).
+Problem Statement
+You are building a system that drives a question-based conversation flow for users.
+The system consists of multiple modules. Each module contains a set of questions.
+A user moves through questions by selecting options. Each option determines which question
+comes next.
+During a conversation, a user may:
+- Move within the same module
+- Switch to a different module
+- Re-enter the flow from an old link or notification
+- Reach special questions that reset previous context for that module
+Your task is to design and implement the backend that correctly handles all of the above.
+You are free to design the APIs, data structures, and storage as you see fit.
+Functional Expectations
+Your system must support the following behaviors:
+1. A user can start a module and begin answering questions.
+2. Each question presents options that determine the next question.
+3. Some options may move the user to a different module.
+4. The system must maintain:
+- Complete conversation history for the user
+- Active state of the user within the current module
+5. Some questions act as checkpoints:
+- After such a question, previous context for that module should not affect future
+flow.
+- History must still be preserved.
+6. The system must handle a user opening an old deep link or notification pointing to a
+specific question:
+- If that question is no longer valid, the system should return the latest valid
+question based on the user’s current state.
+7. The system must defensively handle incorrect flows such as:
+- Invalid options
+- Broken question references
+- Switching between modules multiple times
+- Returning to a previously visited module
+AI Usage (Optional)
+Create a file named: AI_USAGE.md
+This file must include:
+1. AI tools you used
+2. Prompts you gave
+3. What you modified from AI output
+4. What AI got wrong
+5. How you verified correctness
+We will also evaluate how you think while using AI, not whether you avoid it.
+Bonus (Optional)
+Allow users to go back to the previous question within the current module state.
+Submission
+- GitHub repository
+- README with setup instructions
+- AI_USAGE.md
+Evaluation Criteria
+We will evaluate:
+- Quality of API and data design
+- Code clarity and structure
+- Handling of state vs history
+- Defensive handling of edge cases
+- Thoughtful and transparent AI usage

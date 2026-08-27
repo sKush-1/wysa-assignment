@@ -1,10 +1,15 @@
 import { Router, IRouter } from 'express'
 import {
+  authMiddleware,
+  optionalAuthMiddleware,
+} from '../middleware/auth.middleware.js'
+import {
   startFlow,
   getCurrentQuestion,
   deepLinkQuestion,
   submitAnswer,
   goBack,
+  listModules,
 } from '../controllers/flow.controller.js'
 
 const router: IRouter = Router()
@@ -67,7 +72,7 @@ const router: IRouter = Router()
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/start', startFlow)
+router.post('/start', authMiddleware, startFlow)
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -107,7 +112,7 @@ router.post('/start', startFlow)
  *             example:
  *               error: "No active flow session. Call POST /api/flow/start first."
  */
-router.get('/current', getCurrentQuestion)
+router.get('/current', authMiddleware, getCurrentQuestion)
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -177,7 +182,7 @@ router.get('/current', getCurrentQuestion)
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/questions/:questionId', deepLinkQuestion)
+router.get('/questions/:questionId', authMiddleware, deepLinkQuestion)
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -274,7 +279,7 @@ router.get('/questions/:questionId', deepLinkQuestion)
  *             example:
  *               error: "State mismatch: your current question is \"<id>\", not \"<id>\". Fetch GET /api/flow/current to sync."
  */
-router.post('/answer', submitAnswer)
+router.post('/answer', authMiddleware, submitAnswer)
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -328,6 +333,7 @@ router.post('/answer', submitAnswer)
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/back', goBack)
+router.post('/back', authMiddleware, goBack)
+router.get('/modules', optionalAuthMiddleware, listModules)
 
 export default router

@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import express, { Express } from 'express'
+import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
 import { authMiddleware } from './middleware/auth.middleware.js'
 import { errorHandler } from './middleware/error.middleware.js'
@@ -11,6 +12,7 @@ const app: Express = express()
 const PORT = process.env.PORT ?? 3000
 
 // ── Global middleware ──────────────────────────────────────────────────────────
+app.use(cors())
 app.use(express.json())
 
 // ── Swagger UI (no auth required) ─────────────────────────────────────────────
@@ -39,10 +41,9 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-// ── Protected routes (require x-user-email header) ────────────────────────────
-app.use('/api', authMiddleware)
+// ── API routes ────────────────────────────────────────────────────────────────
 app.use('/api/flow', flowRoutes)
-app.use('/api/history', historyRoutes)
+app.use('/api/history', authMiddleware, historyRoutes)
 
 // ── Global error handler (must be last) ───────────────────────────────────────
 app.use(errorHandler)
