@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { flowApi } from '../api/flowApi'
-import type { Module } from '../types'
-import { MessageSquareHeart, ArrowRight, UserCheck, Sparkles, Layers, ShieldCheck } from 'lucide-react'
+import { MessageSquareHeart, ArrowRight, UserCheck, Sparkles, ShieldCheck } from 'lucide-react'
 
 export const EntryScreen: React.FC = () => {
   const { login, isAuthenticated } = useAuth()
@@ -11,8 +9,6 @@ export const EntryScreen: React.FC = () => {
   const location = useLocation()
 
   const [email, setEmail] = useState('')
-  const [modules, setModules] = useState<Module[]>([])
-  const [selectedModuleId, setSelectedModuleId] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -23,24 +19,6 @@ export const EntryScreen: React.FC = () => {
       navigate(from, { replace: true })
     }
   }, [isAuthenticated, navigate, location])
-
-  // Load modules to let user pick initial module
-  useEffect(() => {
-    const fetchModules = async () => {
-      try {
-        const res = await flowApi.getModules()
-        setModules(res.modules)
-        if (res.modules.length > 0) {
-          // Default to first module (or Initial Assessment)
-          const initial = res.modules.find((m) => m.name.toLowerCase().includes('initial')) || res.modules[0]
-          setSelectedModuleId(initial.id)
-        }
-      } catch (err) {
-        console.error('Could not prefetch modules', err)
-      }
-    }
-    fetchModules()
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,12 +33,6 @@ export const EntryScreen: React.FC = () => {
       setError(null)
       // Save simulated auth header in localStorage & context
       login(trimmed)
-
-      // If a module was selected, start that module flow
-      if (selectedModuleId) {
-        await flowApi.startFlow(selectedModuleId)
-      }
-
       navigate('/flow')
     } catch (err: any) {
       setError(err.formattedMessage || 'Failed to start session. Please try again.')
@@ -138,42 +110,6 @@ export const EntryScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Initial Module Selector */}
-            {modules.length > 0 && (
-              <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-indigo-400" /> Starting Module
-                </label>
-                <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
-                  {modules.map((m) => (
-                    <label
-                      key={m.id}
-                      className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
-                        selectedModuleId === m.id
-                          ? 'bg-indigo-950/40 border-indigo-500/50 text-white'
-                          : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="moduleId"
-                        value={m.id}
-                        checked={selectedModuleId === m.id}
-                        onChange={() => setSelectedModuleId(m.id)}
-                        className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-slate-200 truncate">{m.name}</div>
-                        {m.description && (
-                          <div className="text-[11px] text-slate-500 truncate">{m.description}</div>
-                        )}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Error Message */}
             {error && (
               <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs">
@@ -216,3 +152,4 @@ export const EntryScreen: React.FC = () => {
     </div>
   )
 }
+

@@ -63,14 +63,19 @@ export const FlowScreen: React.FC = () => {
       setCompleted(false)
     } catch (err: any) {
       if (err.status === 404) {
-        // No active flow session -> Open module selector or start default module
+        // No active flow session -> Start default Initial Assessment module
         const modRes = await flowApi.getModules().catch(() => ({ modules: [] }))
         if (modRes.modules.length > 0) {
-          const startRes = await flowApi.startFlow(modRes.modules[0].id)
+          const initial = modRes.modules.find((m) => m.name.toLowerCase().includes('initial')) || modRes.modules[0]
+          const startRes = await flowApi.startFlow(initial.id)
           setQuestion(startRes.question)
+          const curr = await flowApi.getCurrent().catch(() => null)
+          if (curr) {
+            setState(curr.state)
+          }
           setCompleted(false)
         } else {
-          showToast('No active conversation flow found. Please start a module.', 'warning')
+          showToast('No active conversation flow found.', 'warning')
         }
       } else {
         showToast(err.formattedMessage || 'Error loading active flow session.', 'error')

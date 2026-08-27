@@ -25,10 +25,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = (email: string) => {
     const trimmed = email.trim().toLowerCase()
+    localStorage.setItem(STORAGE_KEY_EMAIL, trimmed)
     setUserEmail(trimmed)
   }
 
   const logout = () => {
+    localStorage.removeItem(STORAGE_KEY_EMAIL)
     setUserEmail(null)
   }
 
