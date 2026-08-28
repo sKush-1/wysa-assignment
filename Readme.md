@@ -287,6 +287,7 @@ POSTGRES_PORT=5432
 DATABASE_URL="postgresql://wysa:wysa_secret@localhost:5432/wysa_db?schema=public"
 PORT=3000
 NODE_ENV=development
+CORS_ORIGIN=http://localhost:5173
 ```
 
 #### Setup Frontend `.env`:

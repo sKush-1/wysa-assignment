@@ -12,7 +12,18 @@ const app: Express = express()
 const PORT = process.env.PORT ?? 3000
 
 // ── Global middleware ──────────────────────────────────────────────────────────
-app.use(cors())
+const corsOrigin = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.includes(',')
+    ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+    : process.env.CORS_ORIGIN
+  : '*'
+
+app.use(
+  cors({
+    origin: corsOrigin,
+    credentials: true,
+  }),
+)
 app.use(express.json())
 
 // ── Swagger UI (no auth required) ─────────────────────────────────────────────
