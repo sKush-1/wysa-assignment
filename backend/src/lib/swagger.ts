@@ -14,14 +14,17 @@ const options: swaggerJsdoc.Options = {
 A backend service that powers a **modular conversation flow system** (automated support bot / dynamic survey).
 
 ## Authentication
-Every protected endpoint requires the \`x-user-email\` header.
-The server will **auto-create** the user if they don't exist yet (simulated auth).
+1. First, call \`POST /api/auth/login\` with the user's email to create or retrieve the user.
+2. Then, pass the \`x-user-email\` header on all subsequent requests.
+
+This two-step approach guarantees the user exists in the database before any flow operations are attempted.
 
 ## How the flow works
-1. **Start** a module → get the first question
-2. **Answer** questions → engine routes you through the graph
-3. **Back** to undo a step (blocked at checkpoints)
-4. **History** to replay the full conversation ledger
+1. **Login** → create/find user
+2. **Start** a module → get the first question
+3. **Answer** questions → engine routes you through the graph
+4. **Back** to undo a step (blocked at checkpoints)
+5. **History** to replay the full conversation ledger
       `.trim(),
       contact: { name: 'Wysa Assignment' },
     },

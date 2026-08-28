@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from 'express'
 import prisma from '../lib/prisma.js'
 
 /**
- * Reads the `x-user-email` header and upserts the user in the database,
- * then attaches them to `req.user` for all downstream handlers.
- * Rejects with 401 if header is missing or invalid.
+ * Reads the `x-user-email` header and looks up the user in the database.
+ * The user must already exist (created via POST /api/auth/login).
+ * Rejects with 401 if header is missing, invalid, or user not found.
  */
 export async function authMiddleware(
   req: Request,
@@ -19,11 +19,13 @@ export async function authMiddleware(
   }
 
   try {
-    const user = await prisma.user.upsert({
-      where: { email },
-      update: {},
-      create: { email },
-    })
+    const user = await prisma.user.findUnique({ where: { email } })
+
+    if (!user) {
+      res.status(401).json({ error: 'User not found. Please log in first via POST /api/auth/login.' })
+      return
+    }
+
     req.user = user
     next()
   } catch (err) {
@@ -33,8 +35,8 @@ export async function authMiddleware(
 
 /**
  * Optional authentication middleware.
- * If `x-user-email` is present, attaches the user to `req.user`.
- * If not present, proceeds seamlessly with `req.user = undefined`.
+ * If `x-user-email` is present and user exists, attaches to `req.user`.
+ * If not present or user not found, proceeds with `req.user = undefined`.
  */
 export async function optionalAuthMiddleware(
   req: Request,
@@ -45,16 +47,13 @@ export async function optionalAuthMiddleware(
 
   if (email && typeof email === 'string') {
     try {
-      const user = await prisma.user.upsert({
-        where: { email },
-        update: {},
-        create: { email },
-      })
-      req.user = user
+      const user = await prisma.user.findUnique({ where: { email } })
+      if (user) req.user = user
     } catch {
-      // Ignore user upsert error on optional auth
+      // Ignore — optional auth
     }
   }
 
   next()
 }
+

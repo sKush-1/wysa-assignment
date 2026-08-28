@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { flowApi } from '../api/flowApi'
 import { MessageSquareHeart, ArrowRight, UserCheck, Sparkles, ShieldCheck } from 'lucide-react'
 
 export const EntryScreen: React.FC = () => {
@@ -31,7 +32,10 @@ export const EntryScreen: React.FC = () => {
     try {
       setLoading(true)
       setError(null)
-      // Save simulated auth header in localStorage & context
+      // 1. Create/find user on the server FIRST — guarantees user exists
+      //    in DB before any subsequent authenticated requests fire.
+      await flowApi.loginUser(trimmed)
+      // 2. Only after server confirms, save to localStorage & context
       login(trimmed)
       navigate('/flow')
     } catch (err: any) {

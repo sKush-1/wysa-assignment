@@ -14,6 +14,16 @@ import type {
  */
 export const flowApi = {
   /**
+   * POST /api/auth/login
+   * Creates or finds the user by email. Must be called once before
+   * any other authenticated request to guarantee the user exists server-side.
+   */
+  async loginUser(email: string): Promise<{ user: { id: string; email: string; createdAt: string } }> {
+    const res = await apiClient.post<{ user: { id: string; email: string; createdAt: string } }>('/auth/login', { email })
+    return res.data
+  },
+
+  /**
    * Fetches available modules for selection.
    */
   async getModules(): Promise<ModulesResponse> {

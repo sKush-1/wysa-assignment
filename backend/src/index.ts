@@ -7,6 +7,7 @@ import { errorHandler } from './middleware/error.middleware.js'
 import { swaggerSpec } from './lib/swagger.js'
 import flowRoutes from './routes/flow.routes.js'
 import historyRoutes from './routes/history.routes.js'
+import authRoutes from './routes/auth.routes.js'
 
 const app: Express = express()
 const PORT = process.env.PORT ?? 3000
@@ -53,6 +54,7 @@ app.get('/health', (_req, res) => {
 })
 
 // ── API routes ────────────────────────────────────────────────────────────────
+app.use('/api/auth', authRoutes)
 app.use('/api/flow', flowRoutes)
 app.use('/api/history', authMiddleware, historyRoutes)
 
